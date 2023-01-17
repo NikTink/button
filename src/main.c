@@ -11,13 +11,6 @@
 #include <zephyr/sys/printk.h>
 #include <inttypes.h>
 
-//bit masks for buttons
-
-#define BUTTON_1 8192
-#define BUTTON_2 16384
-#define BUTTON_3 32768
-#define BUTTON_4 65536
-
 /*
 GLOBAL VARIABLES
 */
@@ -26,6 +19,8 @@ uint32_t switch_delay = 1000;			//delay before changing logical state
 bool led_animation_mode = false;		//led animation mode (false = blink, true = spin)
 uint32_t last_tick = 0;					//last tick the logical state was changed
 uint8_t current_led = 1;				//current led selected (1-4, 0 = default)
+
+
 
 /*
  * Get button configuration for sw0, 1, 2 and 3.
@@ -87,10 +82,9 @@ static struct gpio_dt_spec led4 = GPIO_DT_SPEC_GET_OR(DT_ALIAS(led3), gpios,
 void button_pressed(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
-	
-	switch(pins) //test pins against mask. We want to only look for single-button presses.
-		{
-			case BUTTON_1:				//change anim mode
+		 //test callback pinmask against button masks. We want to only look for single-button presses.
+			if (cb -> pin_mask == button1_cb_data.pin_mask)	//change anim mode
+			{
 				led_animation_mode ^= 1; 
 				printk("current mode: ");
 				if (led_animation_mode)
@@ -99,30 +93,36 @@ void button_pressed(const struct device *dev, struct gpio_callback *cb,
 				} else {
 					printk("blink\n");
 				}
-				break;
+				return;
+			}				
 			
-			case BUTTON_2:				//increase switch delay
+			if (cb -> pin_mask == button2_cb_data.pin_mask)	//increase switch delay
+			{				
 				if (switch_delay < 5000)
 				{
 					switch_delay = switch_delay + 100; 
 					printk("current delay: %i\n", switch_delay);
 				}
-				break;
+				return;
+			}
 			
-			
-			case BUTTON_3:				//unused
+			if (cb -> pin_mask == button3_cb_data.pin_mask)	//unused
+			{				
 				
-				break;
+				return;
+			}
 			
-			case BUTTON_4:				// decrease switch delay
+			if (cb -> pin_mask == button4_cb_data.pin_mask)	// decrease switch delay
+			{				
 				if (switch_delay > 100)
 				{
 					switch_delay = switch_delay - 100;
 					printk("current delay: %i\n", switch_delay);
 				}
-				break;
+				return;
+			}
 
-		}
+		
 }
 
 /*
